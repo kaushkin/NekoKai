@@ -88,9 +88,9 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         } else if (position == translationRow) {
             Browser.openUrl(getParentActivity(), "https://neko.crowdin.com/nekogram");
         } else if (position == websiteRow) {
-            Browser.openUrl(getParentActivity(), "https://nekogram.app");
+            Browser.openUrl(getParentActivity(), "https://t.me/neko_pe");
         } else if (position == sourceCodeRow) {
-            Browser.openUrl(getParentActivity(), "https://github.com/Nekogram/Nekogram");
+            Browser.openUrl(getParentActivity(), "https://github.com/hehcker/Nekogram");
         } else if (position == checkUpdateRow) {
             ((LaunchActivity) getParentActivity()).checkAppUpdate(true, new Browser.Progress() {
                 @Override
@@ -178,7 +178,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
                     if (position == channelRow) {
                         textCell.setTextAndValue(LocaleController.getString(R.string.OfficialChannel), "@" + LocaleController.getString(R.string.OfficialChannelUsername), divider);
                     } else if (position == websiteRow) {
-                        textCell.setTextAndValue(LocaleController.getString(R.string.OfficialSite), "nekogram.app", divider);
+                        textCell.setTextAndValue(LocaleController.getString(R.string.OfficialSite), "t.me/" + LocaleController.getString(R.string.OfficialChannelUsername), divider);
                     } else if (position == sourceCodeRow) {
                         textCell.setTextAndValue(LocaleController.getString(R.string.ViewSourceCode), "GitHub", divider);
                     }
