@@ -341,6 +341,12 @@ import tw.nekomimi.nekogram.helpers.remote.ConfigHelper;
 import tw.nekomimi.nekogram.settings.NekoSettingsActivity;
 import tw.nekomimi.nekogram.translator.Translator;
 
+import tw.nekomimi.nekogram.plugins.PluginsConstants;
+import tw.nekomimi.nekogram.plugins.PluginsController;
+import tw.nekomimi.nekogram.plugins.hooks.MenuItemRecord;
+import tw.nekomimi.nekogram.plugins.ui.components.PluginsMenuWrapper;
+import tw.nekomimi.nekogram.plugins.utils.MenuContextBuilder;
+
 public class ProfileActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate, DialogsActivity.DialogsActivityDelegate, SharedMediaLayout.SharedMediaPreloaderDelegate, ImageUpdater.ImageUpdaterDelegate, SharedMediaLayout.Delegate {
     private final static int PHONE_OPTION_CALL = 0,
             PHONE_OPTION_COPY = 1,
@@ -566,6 +572,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private TLRPC.FileLocation avatar;
     private TLRPC.FileLocation avatarBig;
     private ImageLocation uploadingImageLocation;
+
+    private ActionBarMenuSubItem pluginsMenuItem;
+    private PluginsMenuWrapper pluginsMenuWrapper;
+    private MenuContextBuilder profileMenuContextData;
 
     private final static int add_contact = 1;
     private final static int block_contact = 2;
@@ -9690,8 +9700,18 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     listAdapter.notifyDataSetChanged();
                 }
             }
-        }
-    }
+        } else if (id == NotificationCenter.pluginMenuItemsUpdated) {
+            if (this.profileMenuContextData != null && this.pluginsMenuWrapper != null && this.pluginsMenuItem != null) {
+                List<MenuItemRecord> menuItemsForLocation = PluginsController.getInstance().getMenuItemsForLocation(PluginsConstants.MenuItemTypes.PROFILE_ACTION_MENU, this.profileMenuContextData.build());
+                if (menuItemsForLocation != null && !menuItemsForLocation.isEmpty()) {
+                    this.pluginsMenuWrapper.rebuildMenu(menuItemsForLocation);
+                    this.pluginsMenuItem.setVisibility(View.VISIBLE); 
+                } else {
+                    this.pluginsMenuItem.setVisibility(View.GONE);
+                }
+            }
+        } 
+    } 
 
     private void updateAutoDeleteItem() {
         if (autoDeleteItem == null || autoDeletePopupWrapper == null) {
@@ -12473,6 +12493,29 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         if (selfUser && !myProfile) {
             otherItem.addSubItem(logout, R.drawable.msg_leave, LocaleController.getString(R.string.LogOut));
         }
+        
+        profileMenuContextData = MenuContextBuilder.from(this)
+                .withChat(getMessagesController().getChat(chatId))
+                .withUser(getMessagesController().getUser(userId))
+                .withEncryptedChat(currentEncryptedChat)
+                .withChatFull(chatInfo)
+                .withUserFull(userInfo)
+                .withBotInfo(botInfo);
+
+        List<MenuItemRecord> menuItemsForLocation = PluginsController.getInstance().getMenuItemsForLocation(PluginsConstants.MenuItemTypes.PROFILE_ACTION_MENU, profileMenuContextData);
+
+        if (!menuItemsForLocation.isEmpty() && otherItem != null) {
+            pluginsMenuWrapper = new PluginsMenuWrapper(this, otherItem.getPopupLayout().getSwipeBack(), menuItemsForLocation, PluginsConstants.MenuItemTypes.PROFILE_ACTION_MENU, profileMenuContextData.build(), resourcesProvider) {
+                @Override
+                public void closeMenu() {
+                    otherItem.toggleSubMenu();
+                }
+            };
+            
+            pluginsMenuItem = otherItem.addSwipeBackItem(R.drawable.msg_plugins, null, LocaleController.getString(R.string.Plugins), pluginsMenuWrapper.swipeBack);
+            pluginsMenuItem.setOnClickListener(view -> pluginsMenuItem.openSwipeBack());
+        }
+
         if (!isPulledDown) {
             otherItem.hideSubItem(gallery_menu_save);
             otherItem.hideSubItem(set_as_main);

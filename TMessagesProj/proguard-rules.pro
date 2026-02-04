@@ -147,11 +147,24 @@
     public boolean isLayoutSuppressed();
 }
 
--repackageclasses
 -allowaccessmodification
 -keepattributes SourceFile,LineNumberTable
--renamesourcefileattribute SourceFile
+-dontobfuscate
 -dontoptimize
 
 -dontwarn android.support.annotation.*
 -dontwarn androidx.compose.**
+-dontwarn javax.script.AbstractScriptEngine
+-dontwarn javax.script.Compilable
+-dontwarn javax.script.ScriptEngine
+-dontwarn javax.script.ScriptEngineFactory
+
+#-keep class org.telegram.messenger.R { *; }
+#-keep class org.telegram.messenger.R$* { *; }
+-keep class org.telegram.** { *; }
+-keep class de.robv.android.xposed.** { *; }
+-keep class tw.nekomimi.nekogram.utils.** { *; }
+-keep class tw.nekomimi.nekogram.plugins.** { *; }
+
+-keep class client_utils.NotificationCenterDelegate { *; }
+-keep class android_utils.R { *; }

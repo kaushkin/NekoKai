@@ -47,6 +47,9 @@ public class NekoExperimentalSettingsActivity extends BaseNekoSettingsActivity {
     private int showRPCErrorRow;
     private int experiment2Row;
 
+    private int portedExpRow;
+    private int inAppVibrationRow;
+
     private int dataRow;
     private int sendBugReportRow;
     private int deleteDataRow;
@@ -218,6 +221,11 @@ public class NekoExperimentalSettingsActivity extends BaseNekoSettingsActivity {
             if (view instanceof TextCheckCell) {
                 ((TextCheckCell) view).setChecked(NekoConfig.keepFormatting);
             }
+        } else if (position == inAppVibrationRow) {
+            NekoConfig.toggleInAppVibration();
+            if (view instanceof TextCheckCell) {
+                ((TextCheckCell) view).setChecked(NekoConfig.inAppVibration);
+            }
         }
     }
 
@@ -257,6 +265,10 @@ public class NekoExperimentalSettingsActivity extends BaseNekoSettingsActivity {
         contentRestrictionRow = Extra.isDirectApp() ? addRow("contentRestriction") : -1;
         showRPCErrorRow = addRow("showRPCError");
         experiment2Row = addRow();
+        
+        portedExpRow = addRow("portedExp");
+        inAppVibrationRow = addRow("inAppVibration");
+
 
         if (AnalyticsHelper.isSettingsAvailable()) {
             dataRow = addRow();
@@ -320,6 +332,7 @@ public class NekoExperimentalSettingsActivity extends BaseNekoSettingsActivity {
                         textCell.setTextAndCheck(LocaleController.getString(R.string.ForceFontWeightFallback), NekoConfig.forceFontWeightFallback, divider);
                     } else if (position == keepFormattingRow) {
                         textCell.setTextAndCheck(LocaleController.getString(R.string.TranslationKeepFormatting), NekoConfig.keepFormatting, divider);
+                    } else if (position == inAppVibrationRow) { textCell.setTextAndCheck( "In-app vibration", NekoConfig.inAppVibration, divider );
                     }
                     break;
                 }
@@ -327,6 +340,8 @@ public class NekoExperimentalSettingsActivity extends BaseNekoSettingsActivity {
                     HeaderCell headerCell = (HeaderCell) holder.itemView;
                     if (position == experimentRow) {
                         headerCell.setText(LocaleController.getString(R.string.Experiment));
+                    } else if (position == portedExpRow) {
+                        headerCell.setText("Ported features"); // todo: localize
                     } else if (position == dataRow) {
                         headerCell.setText(LocaleController.getString(R.string.SendAnonymousData));
                     }
@@ -373,9 +388,9 @@ public class NekoExperimentalSettingsActivity extends BaseNekoSettingsActivity {
                 return TYPE_SHADOW;
             } else if (position == deleteAccountRow || position == downloadSpeedBoostRow) {
                 return TYPE_SETTINGS;
-            } else if (position > experimentRow && position <= showRPCErrorRow || position == sendBugReportRow) {
+            } else if ((position > portedExpRow && position <= inAppVibrationRow) || (position > experimentRow && position <= showRPCErrorRow) || position == sendBugReportRow) {
                 return TYPE_CHECK;
-            } else if (position == experimentRow || position == dataRow) {
+            } else if (position == experimentRow || position == portedExpRow || position == dataRow) {
                 return TYPE_HEADER;
             } else if (position == deleteDataRow || position == copyReportIdRow) {
                 return TYPE_DETAIL_SETTINGS;

@@ -385,7 +385,7 @@ public class ContactsController extends BaseController {
         Utilities.globalQueue.postRunnable(() -> {
             AccountManager am = AccountManager.get(ApplicationLoader.applicationContext);
             try {
-                Account[] accounts = am.getAccountsByType("tw.nekomimi.nekogram");
+                Account[] accounts = am.getAccountsByType("tw.nekomimi.nekogram.pl");
                 for (int a = 0; a < accounts.length; a++) {
                     Account acc = accounts[a];
                     boolean found = false;
@@ -417,7 +417,7 @@ public class ContactsController extends BaseController {
                 readContacts();
                 if (systemAccount == null) {
                     try {
-                        systemAccount = new Account("" + getUserConfig().getClientUserId(), "tw.nekomimi.nekogram");
+                        systemAccount = new Account("" + getUserConfig().getClientUserId(), "tw.nekomimi.nekogram.pl");
                         am.addAccountExplicitly(systemAccount, "", null);
                     } catch (Exception ignore) {
 

@@ -1289,6 +1289,34 @@ public class MediaDataController extends BaseController {
         });
     }
 
+
+    public void setPlaceholderImageByIndex(final BackupImageView backupImageView, String setName, final int index, final String filter) {
+        TLRPC.TL_inputStickerSetShortName inputStickerSet = new TLRPC.TL_inputStickerSetShortName();
+        inputStickerSet.short_name = setName;
+        final String tag = "sticker_" + setName + "_" + index;
+        backupImageView.setTag(tag);
+        backupImageView.setImage((ImageLocation) null, (String) null, (Drawable) null, 0, (Object) null);
+
+        getStickerSet(inputStickerSet, 0, false, new Utilities.Callback<TLRPC.TL_messages_stickerSet>() {
+            @Override
+            public void run(TLRPC.TL_messages_stickerSet stickerSet) {
+                if (tag.equals(backupImageView.getTag())) {
+                    if (stickerSet == null || stickerSet.documents == null || stickerSet.documents.isEmpty()) {
+                        return;
+                    }
+                    if (index >= 0 && index < stickerSet.documents.size()) {
+                        TLRPC.Document document = stickerSet.documents.get(index);
+                        if (document != null) {
+                            Drawable thumb = DocumentObject.getSvgThumb(document, Theme.key_windowBackgroundWhiteGrayIcon, 0.2f, 1.0f, null);
+                            backupImageView.setImage(ImageLocation.getForDocument(document), filter, thumb, 0, document);
+                            backupImageView.invalidate();
+                        }
+                    }
+                }
+            }
+        });
+    }
+
     public static String inputSetKey(TLRPC.InputStickerSet i) {
         if (i instanceof TLRPC.TL_inputStickerSetID)
             return "id" + i.id + "access_hash" + i.access_hash;

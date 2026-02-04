@@ -27,6 +27,7 @@ import tw.nekomimi.nekogram.helpers.CloudSettingsHelper;
 import tw.nekomimi.nekogram.helpers.LensHelper;
 import tw.nekomimi.nekogram.translator.Translator;
 import tw.nekomimi.nekogram.translator.TranslatorApps;
+import tw.nekomimi.nekogram.plugins.PluginsController;
 
 public class NekoConfig {
     //TODO: refactor
@@ -150,6 +151,16 @@ public class NekoConfig {
 
     public static boolean isChineseUser = false;
 
+    public static boolean inAppVibration = true;
+
+    public static boolean pluginsEngine = false;
+    public static boolean pluginsDevMode = false;
+    public static boolean pluginsSafeMode = false;
+    public static boolean pluginsCompactView = false;
+    public static java.util.Set<String> pinnedPlugins = new java.util.HashSet<>();
+
+    public static int dividerType = 0; // currently unused!!!
+
     private static final SharedPreferences.OnSharedPreferenceChangeListener listener = (preferences, key) -> {
         var map = new HashMap<String, String>(1);
         map.put("key", key);
@@ -250,6 +261,15 @@ public class NekoConfig {
             minimizedStickerCreator = preferences.getBoolean("minimizedStickerCreator", false);
             hideChannelBottomButtons = preferences.getBoolean("hideChannelBottomButtons", false);
             keepFormatting = preferences.getBoolean("keepFormatting", true);
+            inAppVibration = preferences.getBoolean("inAppVibration", true);
+            
+            pluginsEngine = preferences.getBoolean("pluginsEngine", false);
+            pluginsDevMode = preferences.getBoolean("pluginsDevMode", false);
+            pluginsSafeMode = preferences.getBoolean("pluginsSafeMode", false);
+            pluginsCompactView = preferences.getBoolean("pluginsCompactView", false);
+            pinnedPlugins = new HashSet<>(preferences.getStringSet("pinnedPlugins", new HashSet<>()));
+            
+            dividerType = preferences.getInt("dividerType", 0);
 
             LensHelper.checkLensSupportAsync();
             preferences.registerOnSharedPreferenceChangeListener(listener);
@@ -406,6 +426,66 @@ public class NekoConfig {
         SharedPreferences.Editor editor = preferences.edit();
         editor.putBoolean("keepFormatting", keepFormatting);
         editor.apply();
+    }
+
+    public static void toggleInAppVibration() {
+        inAppVibration = !inAppVibration;
+        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("nekoconfig", Activity.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean("inAppVibration", inAppVibration);
+        editor.apply();
+    }
+
+    public static void togglePluginsEngine() {
+        pluginsEngine = !pluginsEngine;
+        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("nekoconfig", Activity.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean("pluginsEngine", pluginsEngine);
+        editor.apply();
+    }
+
+    public static void togglePluginsDevMode() {
+        pluginsDevMode = !pluginsDevMode;
+        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("nekoconfig", Activity.MODE_PRIVATE);
+        preferences.edit().putBoolean("pluginsDevMode", pluginsDevMode).apply();
+        PluginsController.getInstance().checkDevServers();
+    }
+
+    public static void togglePluginsCompactView() {
+        pluginsCompactView = !pluginsCompactView;
+        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("nekoconfig", Activity.MODE_PRIVATE);
+        preferences.edit().putBoolean("pluginsCompactView", pluginsCompactView).apply();
+        org.telegram.messenger.NotificationCenter.getGlobalInstance().postNotificationNameOnUIThread(org.telegram.messenger.NotificationCenter.reloadInterface);
+    }
+
+    public static void togglePluginsSafeMode() {
+        pluginsSafeMode = !pluginsSafeMode;
+        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("nekoconfig", Activity.MODE_PRIVATE);
+        preferences.edit().putBoolean("pluginsSafeMode", pluginsSafeMode).apply();
+
+        SharedPreferences pluginPrefs = PluginsController.getInstance().preferences;
+        var edit = pluginPrefs.edit();
+        edit.putBoolean("had_crash", pluginsSafeMode);
+        if (pluginsSafeMode) {
+            edit.putString("crashed_plugin_id", "manual!");
+        } else {
+            edit.remove("crashed_plugin_id");
+        }
+        edit.apply();
+
+        PluginsController.getInstance().restart();
+    }
+
+    public static void setPluginsSafeMode(boolean enabled) {
+        if (pluginsSafeMode == enabled) return;
+        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("nekoconfig", Activity.MODE_PRIVATE);
+        pluginsSafeMode = enabled;
+        preferences.edit().putBoolean("pluginsSafeMode", pluginsSafeMode).apply();
+    }
+
+    public static void savePinnedPlugins() {
+        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("nekoconfig", Activity.MODE_PRIVATE);
+        preferences.edit().putStringSet("pinnedPlugins", pinnedPlugins).apply();
     }
 
     public static void toggleHideChannelBottomButtons() {

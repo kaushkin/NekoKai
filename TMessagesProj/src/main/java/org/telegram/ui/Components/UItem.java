@@ -21,6 +21,10 @@ import org.telegram.ui.ChannelMonetizationLayout;
 import org.telegram.ui.Components.ListView.AdapterWithDiffUtils;
 import org.telegram.ui.StatisticActivity;
 
+import tw.nekomimi.nekogram.plugins.Plugin;
+import tw.nekomimi.nekogram.plugins.models.SettingItem;
+import tw.nekomimi.nekogram.plugins.ui.components.PluginCellDelegate;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
@@ -60,6 +64,9 @@ public class UItem extends AdapterWithDiffUtils.Item {
 
     public Object object;
     public Object object2;
+    
+    public Plugin plugin;
+    public SettingItem settingItem;
 
     public boolean withUsername = true;
 
@@ -422,6 +429,14 @@ public class UItem extends AdapterWithDiffUtils.Item {
         return item;
     }
 
+    public static UItem asPlugin(int i, Plugin plugin, PluginCellDelegate pluginCellDelegate) {
+        UItem uItem = new UItem(100, false);
+        uItem.id = i;
+        uItem.plugin = plugin;
+        uItem.object = pluginCellDelegate;
+        return uItem;
+    }
+
     public static UItem asExpandableSwitch(int id, CharSequence text, CharSequence subText) {
         UItem item = new UItem(UniversalAdapter.VIEW_TYPE_EXPANDABLE_SWITCH, false);
         item.id = id;
@@ -575,6 +590,9 @@ public class UItem extends AdapterWithDiffUtils.Item {
                 viewType == UniversalAdapter.VIEW_TYPE_ROUND_CHECKBOX) {
             return id == item.id;
         }
+        if (viewType == 100) {
+            return this.plugin.equals(item.plugin);
+        }
         if (viewType == UniversalAdapter.VIEW_TYPE_SPACE) {
             return id == item.id;
         }
@@ -602,6 +620,9 @@ public class UItem extends AdapterWithDiffUtils.Item {
         }
         if (viewType == UniversalAdapter.VIEW_TYPE_SPACE) {
             return intValue == item.intValue;
+        }
+        if (viewType == 100) {
+            return item.plugin.equals(this.plugin);
         }
         if (viewType == UniversalAdapter.VIEW_TYPE_ROUND_CHECKBOX ||
             viewType == UniversalAdapter.VIEW_TYPE_USER_CHECKBOX) {

@@ -313,6 +313,11 @@ import tw.nekomimi.nekogram.helpers.WebAppHelper;
 import tw.nekomimi.nekogram.streaming.MediaStreamingProvider;
 import tw.nekomimi.nekogram.translator.Translator;
 import tw.nekomimi.nekogram.translator.TranslatorSettingsPopupWrapper;
+import tw.nekomimi.nekogram.plugins.PluginsConstants;
+import tw.nekomimi.nekogram.plugins.PluginsController;
+import tw.nekomimi.nekogram.plugins.hooks.MenuItemRecord;
+import tw.nekomimi.nekogram.plugins.ui.components.PluginsMenuWrapper;
+import tw.nekomimi.nekogram.plugins.utils.MenuContextBuilder;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -1147,6 +1152,13 @@ public class ChatActivity extends BaseFragment implements
     private boolean switchingFromTopics;
     private float switchingFromTopicsProgress;
 
+
+    private MenuContextBuilder chatMenuContextData;
+    private List pluginsContextMenuItems;
+    private ActionBarMenuItem.Item pluginsMenuItem;
+    private PluginsMenuWrapper pluginsMenuWrapper;
+
+
     public final static int OPTION_RETRY = 0;
     public final static int OPTION_DELETE = 1;
     public final static int OPTION_FORWARD = ForwardItem.ID_FORWARD;
@@ -1209,6 +1221,8 @@ public class ChatActivity extends BaseFragment implements
     public final static int OPTION_SUGGESTION_EDIT_TIME = 112;
     public final static int OPTION_SUGGESTION_EDIT_MESSAGE = 113;
     public final static int OPTION_SUGGESTION_ADD_OFFER = 114;
+
+    public final static int OPTION_PLUGINS = 208;
 
     private final static int[] allowedNotificationsDuringChatListAnimations = new int[]{
             NotificationCenter.messagesRead,
@@ -2981,7 +2995,7 @@ public class ChatActivity extends BaseFragment implements
         if (chatMode == MODE_SEARCH) {
             getNotificationCenter().addObserver(this, NotificationCenter.hashtagSearchUpdated);
         }
-
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.pluginMenuItemsUpdated);
         if (actionBarSearchTags != null) {
             actionBarSearchTags.attach();
         }
@@ -3472,6 +3486,8 @@ public class ChatActivity extends BaseFragment implements
         if (chatMode == MODE_SEARCH) {
             getNotificationCenter().removeObserver(this, NotificationCenter.hashtagSearchUpdated);
         }
+
+        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.pluginMenuItemsUpdated);
 
         if (actionBarSearchTags != null) {
             actionBarSearchTags.detach();
@@ -4515,6 +4531,15 @@ public class ChatActivity extends BaseFragment implements
                 feeItemGap.setVisibility(View.GONE);
                 feeItemText.setVisibility(View.GONE);
             }
+            chatMenuContextData = MenuContextBuilder.from(this)
+                    .withChat(currentChat)
+                    .withEncryptedChat(currentEncryptedChat)
+                    .withUser(currentUser)
+                    .withChatFull(chatInfo)
+                    .withUserFull(userInfo)
+                    .withDialogId(dialog_id);
+            pluginsContextMenuItems = tw.nekomimi.nekogram.plugins.PluginsController.getInstance().getMenuItemsForLocation(tw.nekomimi.nekogram.plugins.PluginsConstants.MenuItemTypes.CHAT_ACTION_MENU, chatMenuContextData);
+
         } else if (chatMode == MODE_EDIT_BUSINESS_LINK) {
             headerItem = menu.addItem(chat_menu_options, R.drawable.ic_ab_other, themeDelegate);
             headerItem.setContentDescription(LocaleController.getString(R.string.AccDescrMoreOptions));
@@ -24149,7 +24174,17 @@ public class ChatActivity extends BaseFragment implements
             if (avatarContainer != null) {
                 avatarContainer.updateSubtitle(true);
             }
-        }
+        } else if (id == NotificationCenter.pluginMenuItemsUpdated) {
+            if (this.chatMenuContextData != null && this.pluginsMenuWrapper != null && this.pluginsMenuItem != null) {
+                List<MenuItemRecord> menuItemsForLocation = PluginsController.getInstance().getMenuItemsForLocation(PluginsConstants.MenuItemTypes.CHAT_ACTION_MENU, this.chatMenuContextData.build());
+                if (menuItemsForLocation != null && !menuItemsForLocation.isEmpty()) {
+                    this.pluginsMenuWrapper.rebuildMenu(menuItemsForLocation);
+                    this.pluginsMenuItem.setVisibility(View.VISIBLE); 
+                } else {
+                    this.pluginsMenuItem.setVisibility(View.GONE);
+                }
+            }
+        } 
     }
 
     private AlertDialog quoteMessageUpdateAlert;
@@ -30533,6 +30568,16 @@ public class ChatActivity extends BaseFragment implements
             groupedMessages = null;
         }
 
+        chatMenuContextData = tw.nekomimi.nekogram.plugins.utils.MenuContextBuilder.from(this)
+                .withChat(currentChat)
+                .withUser(currentUser)
+                .withDialogId(dialog_id)
+                .withMessage(message)
+                .withGroupedMessage(groupedMessages);
+
+        pluginsContextMenuItems = tw.nekomimi.nekogram.plugins.PluginsController.getInstance()
+                .getMenuItemsForLocation("message_context_menu", chatMenuContextData.build());
+
         boolean allowChatActions = true;
         boolean allowPin;
         if (chatMode == MODE_SAVED || chatMode == MODE_QUICK_REPLIES) {
@@ -30740,7 +30785,7 @@ public class ChatActivity extends BaseFragment implements
             final boolean isReactionsAvailableFinal = !suggestEdit && isReactionsAvailable;
 
             int flags = 0;
-            if (isReactionsViewAvailable || showMessageSeen || showSponsorInfo || options.contains(OPTION_TRANSLATE) || options.contains(OPTION_FORWARD) || options.contains(OPTION_FORWARD_NOQUOTE) || options.contains(OPTION_FORWARD_NOCAPTION)) {
+            if (isReactionsViewAvailable || showMessageSeen || showSponsorInfo || options.contains(OPTION_TRANSLATE) || options.contains(OPTION_FORWARD) || options.contains(OPTION_FORWARD_NOQUOTE) || options.contains(OPTION_FORWARD_NOCAPTION) || (pluginsContextMenuItems != null && !pluginsContextMenuItems.isEmpty())) {
                 flags |= ActionBarPopupWindow.ActionBarPopupWindowLayout.FLAG_USE_SWIPEBACK;
             }
 
@@ -31436,6 +31481,28 @@ public class ChatActivity extends BaseFragment implements
                         }
                         processSelectedOption(options.get(i));
                     });
+                    if (option == OPTION_PLUGINS) {
+                        if (pluginsContextMenuItems == null || pluginsContextMenuItems.isEmpty() || popupLayout.getSwipeBack() == null) {
+                            cell.setVisibility(View.GONE);
+                        } else {
+                            pluginsMenuWrapper = new PluginsMenuWrapper(this, popupLayout.getSwipeBack(), pluginsContextMenuItems, "message_context_menu", chatMenuContextData.build(), getResourceProvider()) {
+                                @Override
+                                protected void closeMenu() {
+                                    ChatActivity.this.closeMenu();
+                                }
+                            };
+
+                            int swipeBackIndex = popupLayout.addViewToSwipeBack(pluginsMenuWrapper.swipeBack);
+
+                            cell.setRightIcon(R.drawable.msg_arrowright, v12 -> {
+                                popupLayout.getSwipeBack().openForeground(swipeBackIndex);
+                            });
+
+                            cell.setOnClickListener(v1 -> {
+                                popupLayout.getSwipeBack().openForeground(swipeBackIndex);
+                            });
+                        }
+                    }
                     cell.setOnLongClickListener(view -> {
                         if (selectedObject == null || i >= options.size()) {
                             return false;
@@ -40587,6 +40654,9 @@ public class ChatActivity extends BaseFragment implements
                     fragment.setMessageObject(message);
                     presentFragment(fragment);
                 }
+            } else if (PluginsController.isPlugin(message)) {
+                PluginsController.getInstance().showInstallDialog(ChatActivity.this, message);
+                return;
             } else if (message.type == MessageObject.TYPE_FILE || message.type == MessageObject.TYPE_TEXT) {
                 if (message.getDocumentName().toLowerCase().endsWith("attheme")) {
                     File locFile = null;
@@ -45187,6 +45257,13 @@ public class ChatActivity extends BaseFragment implements
                 items.add(LocaleController.getString(chatMode == MODE_SAVED && threadMessageId != getUserConfig().getClientUserId() ? R.string.Remove : R.string.Delete));
                 options.add(OPTION_DELETE);
                 icons.add(deleteIconRes);
+            }
+        }
+        if (selectedObject != null && pluginsContextMenuItems != null && !pluginsContextMenuItems.isEmpty()) {
+            if (selectedObject.type == 17 || !(MessageObject.getMedia(selectedObject) instanceof TLRPC.TL_messageMediaToDo)) {
+                items.add(LocaleController.getString(R.string.Plugins));
+                options.add(OPTION_PLUGINS);
+                icons.add(R.drawable.msg_plugins);
             }
         }
     }

@@ -376,6 +376,12 @@ public class NotificationCenter {
     public static final int botForumDraftDelete = totalEvents++;
     public static final int tlSchemeParseException = totalEvents++;
 
+    // plugins
+    public static final int pluginMenuItemsUpdated = totalEvents++;
+    public static final int pluginSettingsRegistered = totalEvents++;
+    public static final int pluginSettingsUnregistered = totalEvents++;
+    public static final int pluginsUpdated = totalEvents++;
+
     public static boolean alreadyLogged;
 
     private final SparseArray<ArrayList<NotificationCenterDelegate>> observers = new SparseArray<>();

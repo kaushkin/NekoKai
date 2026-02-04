@@ -4,6 +4,7 @@ import java.nio.file.Paths
 plugins {
     id 'com.android.library'
     id 'org.lsposed.lsparanoid'
+    id 'com.chaquo.python'
 }
 
 configurations.configureEach {
@@ -72,6 +73,8 @@ dependencies {
     implementation 'org.lsposed.hiddenapibypass:hiddenapibypass:6.1'
     implementation 'org.apache.commons:commons-text:1.15.0'
 
+    implementation 'com.aliucord:Aliuhook:1.1.4'
+    implementation 'org.mvel:mvel2:2.5.2.Final'
     implementation 'com.google.firebase:firebase-analytics:23.0.0'
     implementation 'io.sentry:sentry-android:8.29.0'
     implementation 'io.sentry:sentry-okhttp:8.29.0'
@@ -81,6 +84,13 @@ lsparanoid {
     seed = 7436
     variantFilter = { variant -> variant.buildType == "release" || variant.buildType == "play" }
 }
+
+Properties localProperties = new Properties()
+def localPropertiesFile = project.rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withInputStream { localProperties.load(it) }
+}
+def pythonPath = localProperties.getProperty("python.path")
 
 android {
     sourceSets.main.jniLibs.srcDirs = ['./jni/']
@@ -116,7 +126,37 @@ android {
         }
     }
 
+    flavorDimensions "pyVersion"
+    productFlavors {
+        create("py311") { dimension = "pyVersion" }
+    }
+
     defaultConfig {
+            python {
+                version = "3.11"
+                pip {
+
+                    // used by e*****gram
+                    install "beautifulsoup4"
+                    install "pyyaml"
+                    install "lxml"
+                    install "pillow"
+                    install "requests"
+                    install "black"
+                    install "aiofiles"
+                    install "debugpy"
+                    install "packaging"
+
+                    // not sure about that
+                    install "charset_normalizer"
+                    install "certifi"
+                    install "soupsieve"
+                    install "urllib3"
+                    install "typing_extensions"
+                    install "idna"
+                }
+                buildPython(pythonPath)
+            }
         externalNativeBuild {
             cmake {
                 arguments '-DANDROID_STL=c++_static', '-DANDROID_PLATFORM=android-23', '-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON'
@@ -133,5 +173,26 @@ android {
         vectorDrawables {
             generatedDensities = ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi']
         }
+    }
+}
+
+chaquopy {
+    chaquopy {
+        defaultConfig {
+            pyc {
+                src = false
+                // pip = false
+                // stdlib = false
+            }
+        }
+    }
+    sourceSets {
+        main {
+            srcDir "src/main/python"
+        }
+    }
+
+    productFlavors {
+        getByName("py311") { version = "3.11" }
     }
 }

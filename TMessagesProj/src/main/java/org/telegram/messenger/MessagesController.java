@@ -130,6 +130,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import tw.nekomimi.nekogram.NekoConfig;
+import tw.nekomimi.nekogram.plugins.PluginsController;
+import tw.nekomimi.nekogram.plugins.hooks.PluginsHooks;
 
 public class MessagesController extends BaseController implements NotificationCenter.NotificationCenterDelegate {
 
@@ -194,6 +196,8 @@ public class MessagesController extends BaseController implements NotificationCe
     public long giveawayCountriesMax = 10;
     public long giveawayBoostsPerPremium = 4;
     public long boostsPerSentGift = 3;
+    
+    private final PluginsHooks hooks;
 
     public static TLRPC.Peer getPeerFromInputPeer(TLRPC.InputPeer peer) {
         if (peer.chat_id != 0) {
@@ -1473,6 +1477,7 @@ public class MessagesController extends BaseController implements NotificationCe
 
     public MessagesController(int num) {
         super(num);
+        this.hooks = PluginsController.getInstance();
         ImageLoader.getInstance();
         getMessagesStorage();
         getLocationController();
@@ -16825,15 +16830,23 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     // must be run from Utilities.stageQueue
-    public void processUpdates(final TLRPC.Updates updates, boolean fromQueue) {
+    public void processUpdates(final TLRPC.Updates updatesRaw, boolean fromQueue) {
+        final TLRPC.Updates updates = hooks.executeUpdatesHook(updatesRaw.getClass().getSimpleName(), currentAccount, updatesRaw);
+        if (updates == null) {
+            return;
+        }
+
         ArrayList<Long> needGetChannelsDiff = null;
         boolean needGetDiff = false;
         boolean needReceivedQueue = false;
         boolean updateStatus = false;
         if (updates instanceof TLRPC.TL_updateShort) {
-            ArrayList<TLRPC.Update> arr = new ArrayList<>();
-            arr.add(updates.update);
-            processUpdateArray(arr, null, null, false, updates.date);
+            TLRPC.Update hookedUpdate = hooks.executeUpdateHook(updates.update.getClass().getSimpleName(), currentAccount, updates.update);
+            if (hookedUpdate != null) {
+                ArrayList<TLRPC.Update> arr = new ArrayList<>();
+                arr.add(hookedUpdate);
+                processUpdateArray(arr, null, null, false, updates.date);
+            }
         } else if (updates instanceof TLRPC.TL_updateShortChatMessage || updates instanceof TLRPC.TL_updateShortMessage) {
             long userId = updates instanceof TLRPC.TL_updateShortChatMessage ? updates.from_id : updates.user_id;
             TLRPC.User user = getUser(userId);
@@ -17077,6 +17090,16 @@ public class MessagesController extends BaseController implements NotificationCe
                 }
             }
             if (!needGetDiff) {
+                ArrayList<TLRPC.Update> hookedList = new ArrayList<>();
+                for (int i = 0; i < updates.updates.size(); i++) {
+                    TLRPC.Update u = updates.updates.get(i);
+                    TLRPC.Update h = hooks.executeUpdateHook(u.getClass().getSimpleName(), currentAccount, u);
+                    if (h != null) {
+                        hookedList.add(h);
+                    }
+                }
+                updates.updates = hookedList; 
+
                 getMessagesStorage().putUsersAndChats(updates.users, updates.chats, true, true);
                 Collections.sort(updates.updates, updatesComparator);
                 for (int a = 0; a < updates.updates.size(); a++) {
@@ -17443,7 +17466,13 @@ public class MessagesController extends BaseController implements NotificationCe
         long clientUserId = getUserConfig().getClientUserId();
 
         for (int c = 0, size3 = updates.size(); c < size3; c++) {
-            TLRPC.Update baseUpdate = updates.get(c);
+            TLRPC.Update ogBaseUpdate = updates.get(c);
+            
+            TLRPC.Update baseUpdate = hooks.executeUpdateHook(ogBaseUpdate.getClass().getSimpleName(), currentAccount, ogBaseUpdate);
+            if (baseUpdate == null) {
+                continue; 
+            }
+
             if (BuildVars.LOGS_ENABLED && baseUpdate != null) {
                 FileLog.d("process update " + baseUpdate.getClass().getSimpleName());
             }

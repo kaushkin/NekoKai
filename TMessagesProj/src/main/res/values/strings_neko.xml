@@ -320,4 +320,45 @@
 
     <!-- Accessibility -->
     <string name="AccessibilitySettings">Accessibility settings</string>
+
+    
+    <!-- plugins -->
+    <string name="EnablePluginsEngine">Enable Plugins Engine</string>
+    <string name="InstallPlugin">Install</string>
+    <string name="EnableAfterInstallation">Enable plugin after installation</string>
+    <string name="PluginDelete">Delete Plugin</string>
+    <string name="PluginDeleteInfo">Are you sure you want to delete **%1$s**?</string>
+    <string name="PluginDisableError">Failed to disable **%1$s**.</string>
+    <string name="PluginEnableError">Failed to enable **%1$s**.</string>
+    <string name="PluginEngineNotEnabled">Enable the **Plugin Engine** to open settings of **%1$s**.</string>
+    <string name="PluginHasNoSettings">**%1$s** has no settings.</string>
+    <string name="PluginInstallError">Failed to install **%1$s**.</string>
+    <string name="PluginInstalled">**%1$s** installed successfully.</string>
+    <string name="PluginInstalledButFailedToEnable">**%1$s** installed, but an error occurred while enabling.</string>
+    <string name="PluginNoAuthor">Unknown Author</string>
+    <string name="PluginNoDescription">No description provided.</string>
+    <string name="PluginNotEnabled">Enable the **Plugin Engine** to install **%1$s**.</string>
+    <string name="PluginNotFound">**%1$s** not found.</string>
+    <string name="PluginIncompatible">Probably incompatible</string>
+    <string name="PluginIncompatibleInfo">Looks like this plugin uses classes from **another, certain** messenger, which may cause it not to work.</string>
+    <string name="PluginUpdated">**%1$s** updated successfully.</string>
+    <string name="PluginVersion">Version</string>
+    <string name="Plugins">Plugins</string>
+    <string name="PluginsCompactView">Plugins Compact View</string>
+    <string name="PluginsDevMode">Developer Mode</string>
+    <string name="PluginsDevServerLaunched">Developer Server is started.</string>
+    <string name="PluginsDevServerStopped">Developer Server is stopped.</string>
+    <string name="PluginsDocumentation">Documentation</string>
+    <string name="PluginsEngine">Plugins Engine</string>
+    <string name="PluginsInfo">You can find plugins in @neko_pe.</string>
+    <string name="PluginsNotFound">No plugins found.</string>
+    <string name="PluginsPoweredBy">Powered by &lt;a href=https://chaquo.com/chaquopy/&gt;Chaquopy&lt;/a&gt; and &lt;a href=https://github.com/Aliucord/hook&gt;AliuHook&lt;/a&gt;.</string>
+    <string name="PluginsSafeMode">Safe Mode</string>
+    <string name="PluginsSafeModeInfo">The Plugin Engine is disabled due to a crash. Disabling safe mode may lead to unpredictable consequences.</string>
+    <string name="PluginsSafeModeInfo2">In Safe Mode, all plugins are inactive. This allows you to safely find and disable a problematic plugin.</string>
+    <string name="PluginsTrusted">Trusted Plugins</string>
+    <string name="ResetPluginSettings">**%1$s** settings have been reset.</string>
+    <string name="ResetPluginSettingsInfo">Are you sure you want to reset **%1$s** settings to default?</string>
+    <string name="UpdatePlugin">Update</string>
+    <string name="Links">Links</string>
 </resources>

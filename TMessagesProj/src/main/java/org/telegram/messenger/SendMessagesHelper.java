@@ -108,6 +108,9 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import tw.nekomimi.nekogram.NekoConfig;
+import tw.nekomimi.nekogram.plugins.PluginsController;
+import tw.nekomimi.nekogram.plugins.hooks.PluginsHooks;
+import tw.nekomimi.nekogram.utils.text.LocaleUtils;
 
 public class SendMessagesHelper extends BaseController implements NotificationCenter.NotificationCenterDelegate {
 
@@ -130,6 +133,8 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
 
     private final HashMap<String, ImportingStickers> importingStickersFiles = new HashMap<>();
     private final HashMap<String, ImportingStickers> importingStickersMap = new HashMap<>();
+    
+    private final PluginsHooks hooks;
 
     public static boolean checkUpdateStickersOrder(CharSequence text) {
         if (text instanceof Spannable) {
@@ -927,6 +932,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
 
     public SendMessagesHelper(int instance) {
         super(instance);
+        this.hooks = PluginsController.getInstance();
 
         AndroidUtilities.runOnUIThread(() -> {
             getNotificationCenter().addObserver(SendMessagesHelper.this, NotificationCenter.fileUploaded);
@@ -3826,7 +3832,13 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         });
     }
 
-    public void sendMessage(SendMessageParams sendMessageParams) {
+    public void sendMessage(SendMessageParams ogEndMessageParams) {
+        SendMessageParams sendMessageParams = hooks.executeSendMessageHook(currentAccount, ogEndMessageParams);
+        if (sendMessageParams == null) {
+            return;
+        }
+        LocaleUtils.replaceCustomEmojis(currentAccount, sendMessageParams.peer, sendMessageParams.entities);
+        
         String message = sendMessageParams.message;
         String caption = sendMessageParams.caption;
         TLRPC.MessageMedia location = sendMessageParams.location;

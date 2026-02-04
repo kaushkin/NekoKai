@@ -25,6 +25,7 @@ import tw.nekomimi.nekogram.helpers.CloudSettingsHelper;
 import tw.nekomimi.nekogram.helpers.PasscodeHelper;
 import tw.nekomimi.nekogram.helpers.remote.ConfigHelper;
 import tw.nekomimi.nekogram.helpers.remote.UpdateHelper;
+import tw.nekomimi.nekogram.plugins.ui.PluginsActivity;
 
 public class NekoSettingsActivity extends BaseNekoSettingsActivity {
 
@@ -39,6 +40,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
     private int experimentRow;
     private int accessibilityRow;
     private int categories2Row;
+    private int pluginsRow;
 
     private int aboutRow;
     private int channelRow;
@@ -77,6 +79,8 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
             presentFragment(new NekoExperimentalSettingsActivity());
         } else if (position == accessibilityRow) {
             presentFragment(new AccessibilitySettingsActivity());
+        } else if (position == pluginsRow) {
+            presentFragment(new PluginsActivity());
         } else if (position == channelRow) {
             getMessagesController().openByUserName(LocaleController.getString(R.string.OfficialChannelUsername), this, 1);
         } else if (position == donateRow) {
@@ -126,6 +130,7 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
         generalRow = addRow("general");
         appearanceRow = addRow("appearance");
         chatRow = addRow("chat");
+        pluginsRow = addRow("plugins");
         if (!PasscodeHelper.isSettingsHidden()) {
             passcodeRow = addRow("passcode");
         } else {
@@ -219,6 +224,8 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
                         textCell.setTextAndIcon(LocaleController.getString(R.string.NotificationsOther), R.drawable.msg_fave, divider);
                     } else if (position == accessibilityRow) {
                         textCell.setText(LocaleController.getString(R.string.AccessibilitySettings), divider);
+                    } else if (position == pluginsRow) {
+                        textCell.setTextAndIcon(LocaleController.getString(R.string.Plugins), R.drawable.msg_plugins, divider);
                     }
                     break;
                 }

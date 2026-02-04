@@ -159,6 +159,7 @@ import tw.nekomimi.nekogram.NekoConfig;
 import tw.nekomimi.nekogram.forward.ForwardContext;
 import tw.nekomimi.nekogram.forward.ForwardDrawable;
 import tw.nekomimi.nekogram.forward.ForwardItem;
+import tw.nekomimi.nekogram.plugins.PluginsController;
 
 @SuppressWarnings("unchecked")
 public class SharedMediaLayout extends FrameLayout implements NotificationCenter.NotificationCenterDelegate, DialogCell.DialogCellDelegate, ForwardContext {
@@ -7508,6 +7509,10 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
                             } else {
                                 PhotoViewer.getInstance().openPhoto(sharedMediaData[selectedMode].messages, index, dialog_id, mergeDialogId, topicId, provider);
                             }
+                            return;
+                        }
+                        if (PluginsController.isPlugin(message)) {
+                            PluginsController.getInstance().showInstallDialog(this.profileActivity, message);
                             return;
                         }
                         AndroidUtilities.openDocument(message, profileActivity.getParentActivity(), profileActivity);

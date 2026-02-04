@@ -13,6 +13,8 @@ import android.app.Activity;
 import android.app.Application;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -29,6 +31,7 @@ import android.os.PowerManager;
 import android.os.SystemClock;
 import android.telephony.TelephonyManager;
 import android.view.ViewGroup;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -55,6 +58,8 @@ import tw.nekomimi.nekogram.FirebaseFix;
 import tw.nekomimi.nekogram.NekoConfig;
 import tw.nekomimi.nekogram.helpers.AnalyticsHelper;
 import tw.nekomimi.nekogram.helpers.ComponentsHelper;
+import tw.nekomimi.nekogram.plugins.PluginsController;
+import tw.nekomimi.nekogram.plugins.utils.NativeCrashHandler;
 
 public class ApplicationLoader extends Application {
 
@@ -211,6 +216,12 @@ public class ApplicationLoader extends Application {
         }
 
         try {
+            NativeCrashHandler.init(NativeCrashHandler.getCrashFlagPath());
+        } catch (Throwable e) {
+            FileLog.e(e);
+        }
+
+        try {
             connectivityManager = (ConnectivityManager) ApplicationLoader.applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE);
             BroadcastReceiver networkStateReceiver = new BroadcastReceiver() {
                 @Override
@@ -352,6 +363,43 @@ public class ApplicationLoader extends Application {
         };
         if (BuildVars.LOGS_ENABLED) {
             FileLog.d("load libs time = " + (SystemClock.elapsedRealtime() - startTime));
+        }
+
+        if (BuildVars.DEBUG_VERSION || NekoConfig.pluginsEngine) {
+            final Thread.UncaughtExceptionHandler defaultUncaughtExceptionHandler = Thread.getDefaultUncaughtExceptionHandler();
+            Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+                @Override
+                public final void uncaughtException(Thread thread, Throwable th) {
+                    String stackTraceString = Log.getStackTraceString(th);
+                    try {
+                        if (NekoConfig.pluginsEngine) {
+                            SharedPreferences prefs = ApplicationLoader.applicationContext.getSharedPreferences("plugin_settings", 0);
+                            SharedPreferences.Editor editor = prefs.edit();
+                            editor.putBoolean("had_crash", true);
+
+                            String str = null;
+
+                            for (String str2 : PluginsController.getInstance().plugins.keySet()) {
+                                if (stackTraceString.contains(str2)) {
+                                    str = str2;
+                                }
+                            }
+
+                            if (str != null) {
+                                editor.putString("crashed_plugin_id", str).apply();
+                                FileLog.e("Plugin crash detected for plugin: " + str);
+                            }
+                        }
+                        ((ClipboardManager) applicationContext.getSystemService("clipboard")).setPrimaryClip(ClipData.newPlainText("label", stackTraceString));
+                    } catch (Exception e) {
+                        FileLog.e(e);
+                    }
+                    FileLog.e(stackTraceString);
+                    if (defaultUncaughtExceptionHandler != null) {
+                        defaultUncaughtExceptionHandler.uncaughtException(thread, th);
+                    }
+                }
+            });
         }
 
         applicationHandler = new Handler(applicationContext.getMainLooper());

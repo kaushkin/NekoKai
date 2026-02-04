@@ -268,6 +268,9 @@ import tw.nekomimi.nekogram.helpers.UserHelper;
 import tw.nekomimi.nekogram.helpers.remote.UpdateHelper;
 import tw.nekomimi.nekogram.settings.NekoDonateActivity;
 import tw.nekomimi.nekogram.settings.NekoSettingsActivity;
+import tw.nekomimi.nekogram.plugins.PluginsController;
+import tw.nekomimi.nekogram.plugins.PluginsConstants;
+import tw.nekomimi.nekogram.plugins.ui.PluginsActivity;
 
 public class LaunchActivity extends BasePermissionsActivity implements INavigationLayout.INavigationLayoutDelegate, NotificationCenter.NotificationCenterDelegate, DialogsActivity.DialogsActivityDelegate, IPipActivity {
     public final static String EXTRA_FORCE_NOT_INTERNAL_APPS = "force_not_internal_apps";
@@ -728,6 +731,9 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                     }
                     Browser.openUrl(LaunchActivity.this, LocaleController.getString(R.string.TelegramFeaturesUrl));
                     drawerLayoutContainer.closeDrawer(false);
+                } else if (id == 18) {
+                    presentFragment(new PluginsActivity());
+                    drawerLayoutContainer.closeDrawer(false);
                 } else if (id == 15) {
                     showSelectStatusDialog();
                 } else if (id == 20) {
@@ -1069,6 +1075,13 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         AndroidUtilities.enableEdgeToEdge(this);
 
         BackupAgent.requestBackup(this);
+
+        PluginsController.getInstance().init(new Runnable() {
+            @Override
+            public final void run() {
+                PluginsController.getInstance().executeOnAppEvent(PluginsConstants.APP_START);
+            }
+        });
 
 
         //RestrictedLanguagesSelectActivity.checkRestrictedLanguages(false);
@@ -1695,6 +1708,8 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             showTosActivity(account, UserConfig.getInstance(account).unacceptedTermsOfService);
         }
         updateCurrentConnectionState(currentAccount);
+
+        PluginsController.getInstance().loadPluginSettings();
 
         switchingAccount = false;
     }
@@ -7115,6 +7130,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         super.onPause();
         isResumed = false;
         pipActivityHandler.onPause();
+        PluginsController.getInstance().executeOnAppEvent(PluginsConstants.APP_PAUSE);
         NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.stopAllHeavyOperations, 4096);
         ApplicationLoader.mainInterfacePaused = true;
         int account = currentAccount;
@@ -7232,6 +7248,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         }
         isActive = false;
         unregisterReceiver(batteryReceiver);
+        PluginsController.getInstance().executeOnAppEvent(PluginsConstants.APP_STOP);
         if (PhotoViewer.getPipInstance() != null) {
             PhotoViewer.getPipInstance().destroyPhotoViewer();
         }
@@ -7403,6 +7420,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             whenResumed.run();
             whenResumed = null;
         }
+        PluginsController.getInstance().executeOnAppEvent(PluginsConstants.APP_RESUME);
 
         if (MessagesController.getInstance(currentAccount).hasSetupEmailSuggestion()) {
             // Re-check if the user updated their email from another client

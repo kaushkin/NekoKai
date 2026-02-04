@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.DialogObject;
+import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MediaDataController;
 import org.telegram.messenger.MessagesController;
@@ -38,9 +39,15 @@ import org.telegram.ui.Components.SideMenultItemAnimator;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import tw.nekomimi.nekogram.NekoConfig;
 import tw.nekomimi.nekogram.helpers.PasscodeHelper;
+import tw.nekomimi.nekogram.plugins.PluginsConstants;
+import tw.nekomimi.nekogram.plugins.PluginsController;
+import tw.nekomimi.nekogram.plugins.hooks.MenuItemRecord;
+import tw.nekomimi.nekogram.plugins.utils.MenuContextBuilder;
 
 public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
 
@@ -253,6 +260,15 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
         if (!UserConfig.getInstance(UserConfig.selectedAccount).isClientActivated()) {
             return;
         }
+
+        final Map<String, Object> mapBuild = MenuContextBuilder.create()
+                .withAccount(UserConfig.selectedAccount)
+                .withContext(this.mContext)
+                .withUser(UserConfig.getInstance(UserConfig.selectedAccount).getCurrentUser())
+                .build();
+        final List<MenuItemRecord> menuItemsForLocation = PluginsController.getInstance()
+                .getMenuItemsForLocation(PluginsConstants.MenuItemTypes.DRAWER_MENU, mapBuild);
+
         int eventType = Theme.getEventType();
         if (NekoConfig.eventType > 0) {
             eventType = NekoConfig.eventType - 1;
@@ -266,6 +282,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
         int settingsIcon;
         int inviteIcon;
         int helpIcon;
+        int pluginsIcon;
         if (eventType == 0) {
             newGroupIcon = R.drawable.msg_groups_ny;
             //newSecretIcon = R.drawable.msg_secret_ny;
@@ -276,6 +293,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
             settingsIcon = R.drawable.msg_settings_ny;
             inviteIcon = R.drawable.msg_invite_ny;
             helpIcon = R.drawable.msg_help_ny;
+            pluginsIcon = R.drawable.msg_plugins;
         } else if (eventType == 1) {
             newGroupIcon = R.drawable.msg_groups_14;
             //newSecretIcon = R.drawable.msg_secret_14;
@@ -286,6 +304,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
             settingsIcon = R.drawable.msg_settings_14;
             inviteIcon = R.drawable.msg_secret_ny;
             helpIcon = R.drawable.msg_help;
+            pluginsIcon = R.drawable.msg_plugins;
         } else if (eventType == 2) {
             newGroupIcon = R.drawable.msg_groups_hw;
             //newSecretIcon = R.drawable.msg_secret_hw;
@@ -296,6 +315,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
             settingsIcon = R.drawable.msg_settings_hw;
             inviteIcon = R.drawable.msg_invite_hw;
             helpIcon = R.drawable.msg_help_hw;
+            pluginsIcon = R.drawable.msg_plugins;
         } else {
             newGroupIcon = R.drawable.msg_groups;
             //newSecretIcon = R.drawable.msg_secret;
@@ -306,6 +326,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
             settingsIcon = R.drawable.msg_settings_old;
             inviteIcon = R.drawable.msg_invite;
             helpIcon = R.drawable.msg_help;
+            pluginsIcon = R.drawable.msg_plugins;
         }
         UserConfig me = UserConfig.getInstance(UserConfig.selectedAccount);
         boolean showDivider = false;
@@ -355,6 +376,31 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
         items.add(new Item(11, LocaleController.getString(R.string.SavedMessages), savedIcon));
         items.add(new Item(8, LocaleController.getString(R.string.Settings), settingsIcon));
         items.add(null); // divider
+        
+        items.add(new Item(18, LocaleController.getString(R.string.Plugins), pluginsIcon));
+        if (menuItemsForLocation != null && !menuItemsForLocation.isEmpty()) {
+            for (int i = 0; i < menuItemsForLocation.size(); i++) {
+                final MenuItemRecord record = menuItemsForLocation.get(i);
+                int iconResId = record.iconResId;
+                if (iconResId == 0) {
+                    iconResId = pluginsIcon;
+                }
+                String str = record.text;
+                if (str != null) {
+                    int dynamicId = i + 2000;
+                    Item item = new Item(dynamicId, str, iconResId);
+                    item.onClick(view -> {
+                        try {
+                            record.onClickCallback.call(mapBuild);
+                        } catch (Exception e) {
+                            FileLog.e(e);
+                        }
+                    });
+                    items.add(item);
+                }
+            }
+        }
+
         items.add(new Item(7, LocaleController.getString(R.string.InviteFriends), inviteIcon));
         items.add(new Item(13, LocaleController.getString(R.string.TelegramFeatures), helpIcon));
     }

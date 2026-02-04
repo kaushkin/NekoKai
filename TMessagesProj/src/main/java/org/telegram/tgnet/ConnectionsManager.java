@@ -43,6 +43,8 @@ import org.telegram.ui.LoginActivity;
 
 import tw.nekomimi.nekogram.ErrorDatabase;
 import tw.nekomimi.nekogram.NekoConfig;
+import tw.nekomimi.nekogram.plugins.PluginsController;
+import tw.nekomimi.nekogram.plugins.hooks.PluginsHooks;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -107,6 +109,8 @@ public class ConnectionsManager extends BaseController {
     public final static byte USE_IPV4_ONLY = 0;
     public final static byte USE_IPV6_ONLY = 1;
     public final static byte USE_IPV4_IPV6_RANDOM = 2;
+
+    private final PluginsHooks hooks; 
 
     private static long lastDnsRequestTime;
 
@@ -199,6 +203,7 @@ public class ConnectionsManager extends BaseController {
 
     public ConnectionsManager(int instance) {
         super(instance);
+        this.hooks = PluginsController.getInstance();
         connectionState = native_getConnectionState(currentAccount);
         String deviceModel;
         String systemLangCode;
@@ -370,9 +375,26 @@ public class ConnectionsManager extends BaseController {
             FileLog.d("send request " + object + " with token = " + requestToken);
         }
         try {
-            NativeByteBuffer buffer = new NativeByteBuffer(object.getObjectSize());
-            object.serializeToStream(buffer);
-            object.freeResources();
+            final String simpleName = object.getClass().getSimpleName();
+            final TLObject objectToRequest = this.hooks.executePreRequestHook(simpleName, currentAccount, object);
+
+            if (objectToRequest == null) {
+                if (BuildVars.LOGS_ENABLED) {
+                    FileLog.d("Request cancelled by pre-request hook: " + simpleName);
+                }
+                Utilities.stageQueue.postRunnable(() -> {
+                    if (onComplete != null) {
+                        onComplete.run(null, null);
+                    } else if (onCompleteTimestamp != null) {
+                        onCompleteTimestamp.run(null, null, 0);
+                    }
+                });
+                return;
+            }
+            
+            NativeByteBuffer buffer = new NativeByteBuffer(objectToRequest.getObjectSize());
+            objectToRequest.serializeToStream(buffer);
+            objectToRequest.freeResources();
 
             long startRequestTime = 0;
             if (BuildVars.DEBUG_PRIVATE_VERSION && BuildVars.LOGS_ENABLED || (connectionType & ConnectionTypeDownload) != 0) {
@@ -391,7 +413,7 @@ public class ConnectionsManager extends BaseController {
                         responseSize = buff.limit();
                         int magic = buff.readInt32(true);
                         try {
-                            resp = object.deserializeResponse(buff, magic, true);
+                            resp = objectToRequest.deserializeResponse(buff, magic, true);
                         } catch (Exception e2) {
                             if (BuildVars.DEBUG_PRIVATE_VERSION) {
                                 throw e2;
@@ -404,7 +426,7 @@ public class ConnectionsManager extends BaseController {
                         error.code = errorCode;
                         error.text = errorText;
                         if (BuildVars.LOGS_ENABLED && error.code != -2000) {
-                            FileLog.e(object + " got error " + error.code + " " + error.text);
+                            FileLog.e(objectToRequest + " got error " + error.code + " " + error.text);
                         }
                         if (NekoConfig.showRPCError) {
                             ErrorDatabase.showErrorToast(object, errorText);
@@ -429,10 +451,13 @@ public class ConnectionsManager extends BaseController {
                     }
                     if (BuildVars.LOGS_ENABLED) {
                         FileLog.d("java received " + resp + (error != null ? " error = " + error : "") + " messageId = 0x" + Long.toHexString(requestMsgId));
-                        FileLog.dumpResponseAndRequest(currentAccount, object, resp, error, requestMsgId, finalStartRequestTime, requestToken);
+                        FileLog.dumpResponseAndRequest(currentAccount, objectToRequest, resp, error, requestMsgId, finalStartRequestTime, requestToken);
                     }
-                    final TLObject finalResponse = resp;
-                    final TLRPC.TL_error finalError = error;
+                    
+                    PluginsHooks.PostRequestResult postResult = this.hooks.executePostRequestHook(simpleName, currentAccount, resp, error);
+                    final TLObject finalResponse = postResult.response;
+                    final TLRPC.TL_error finalError = postResult.error;
+
                     Utilities.stageQueue.postRunnable(() -> {
                         if (onComplete != null) {
                             onComplete.run(finalResponse, finalError);
