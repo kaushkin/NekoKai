@@ -322,4 +322,42 @@
     <string name="AccNumberOfItems">Показывать количество элементов</string>
     <string name="AccIndexOfItem">Показывать текущую позицию</string>
     <string name="AccShowValueChanges">Озвучивать изменений значения во время его ручного изменения</string>
+    <!--Plugins -->
+    <string name="EnablePluginsEngine">Включить движок плагинов</string>
+    <string name="InstallPlugin">Установить</string>
+    <string name="EnableAfterInstallation">Включить плагин после установки</string>
+    <string name="PluginDelete">Удалить плагин</string>
+    <string name="PluginDeleteInfo">Вы действительно хотите удалить **%1$s**?</string>
+    <string name="PluginDisableError">Не удалось отключить **%1$s**.</string>
+    <string name="PluginEnableError">Не удалось включить **%1$s**.</string>
+    <string name="PluginEngineNotEnabled">Включите **движок плагинов** чтобы открыть настройки **%1$s**.</string>
+    <string name="PluginHasNoSettings">**%1$s** не имеет настроек.</string>
+    <string name="PluginInstallError">Не удалось установить **%1$s**.</string>
+    <string name="PluginInstalled">**%1$s** установлен.</string>
+    <string name="PluginInstalledButFailedToEnable">**%1$s** установлен, но возникла ошибка при включении.</string>
+    <string name="PluginNoAuthor">Автор неизвестен</string>
+    <string name="PluginNoDescription">Описание отсутствует.</string>
+    <string name="PluginNotEnabled">Включите **движок плагинов** чтобы установить **%1$s**.</string>
+    <string name="PluginNotFound">**%1$s** не найден.</string>
+    <string name="PluginIncompatible">Возможная несовместимость</string>
+    <string name="PluginIncompatibleInfo">Кажется, этот плагин использует классы из **одного другого** мессенджера, что может помешать его работоспособности.</string>
+    <string name="PluginUpdated">**%1$s** успешно обновлён.</string>
+    <string name="PluginVersion">Версия</string>
+    <string name="Plugins">Плагины</string>
+    <string name="PluginsCompactView">Компактный режим списка плагинов</string>
+    <string name="PluginsDevMode">Режим разработчика</string>
+    <string name="PluginsDevServerLaunched">Сервер отладки запущен.</string>
+    <string name="PluginsDevServerStopped">Сервер отладки остановлен.</string>
+    <string name="PluginsDocumentation">Документация</string>
+    <string name="PluginsEngine">Движок плагинов</string>
+    <string name="PluginsInfo">Вы можете найти новые плагины в @neko_pe.</string>
+    <string name="PluginsNotFound">Плагины не найдены.</string>
+    <string name="PluginsPoweredBy">Работает на &lt;a href=https://chaquo.com/chaquopy/&gt;Chaquopy&lt;/a&gt; и &lt;a href=https://github.com/Aliucord/hook&gt;AliuHook&lt;/a&gt;.</string>
+    <string name="PluginsSafeMode">Безопасный режим</string>
+    <string name="PluginsSafeModeInfo">Движок плагинов был выключен из-за сбоя. Обратное включение может привести к непредвиденным последствиям.</string>
+    <string name="PluginsSafeModeInfo2">В безопасном режиме все плагины отключены. Это позволяет безопасно найти и ликвидировать проблемный плагин.</string>
+    <string name="ResetPluginSettings">Настройки **%1$s** были сброшены.</string>
+    <string name="ResetPluginSettingsInfo">Вы действительно хотите сбросить настройки **%1$s**?</string>
+    <string name="UpdatePlugin">Обновить</string>
+    <string name="Links">Ссылки</string>
 </resources>
