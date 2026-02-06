@@ -24,7 +24,7 @@ else
         export JAVA_HOME="/usr/lib/jvm/msopenjdk-21-amd64"
     else
         echo "Installing OpenJDK 21..."
-        sudo apt-get update -qq
+        sudo apt-get update -qq || true
         sudo apt-get install -y openjdk-21-jdk-headless
         export JAVA_HOME="/usr/lib/jvm/java-21-openjdk-amd64"
     fi
