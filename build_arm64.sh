@@ -98,7 +98,7 @@ if [ ! -f "TMessagesProj_App/google-services.json" ]; then
       "client_info": {
         "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
         "android_client_info": {
-          "package_name": "org.telegram.messenger.regular"
+          "package_name": "tw.nekomimi.nekogram"
         }
       },
       "oauth_client": [],
@@ -137,8 +137,8 @@ import org.telegram.messenger.BuildConfig;
 import tw.nekomimi.nekogram.helpers.UserHelper;
 
 public class Extra {
-    public static final int APP_ID = 12345;
-    public static final String APP_HASH = "0123456789abcdef0123456789abcdef";
+    public static final int APP_ID = 21569710;
+    public static final String APP_HASH = "06c3de24f27f101a7c05e61ecf0327d2";
 
     public static final String PLAYSTORE_APP_URL = "https://play.google.com/store/apps/details?id=org.telegram.messenger";
 
