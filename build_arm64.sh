@@ -130,5 +130,14 @@ fi
 # 4. Build
 # =======================
 echo "Starting optimized ARM64 build..."
+
+# IMPORTANT: Limit parallelism for 8GB RAM environment
+# Limit CMake native build jobs
+export CMAKE_BUILD_PARALLEL_LEVEL=2 
+
+# Limit Gradle JVM heap to 2GB to leave room for native compiler
+export ORG_GRADLE_JVMARGS="-Xmx2048m -XX:MaxMetaspaceSize=512m"
+
 chmod +x gradlew
-./gradlew assemblePlay -x lint -x test --parallel
+# --max-workers=2 limits Gradle parallelism
+./gradlew assemblePlay -x lint -x test --max-workers=2
