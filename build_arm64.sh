@@ -77,8 +77,21 @@ else
 fi
 
 # Ensure local.properties exists
+# Ensure local.properties exists
 echo "sdk.dir=$ANDROID_HOME" > local.properties
 
+# Detect Python
+if command -v python3 &> /dev/null; then
+    PYTHON_PATH=$(command -v python3)
+    echo "Found Python at $PYTHON_PATH"
+    echo "python.path=$PYTHON_PATH" >> local.properties
+elif command -v python &> /dev/null; then
+    PYTHON_PATH=$(command -v python)
+    echo "Found Python at $PYTHON_PATH"
+    echo "python.path=$PYTHON_PATH" >> local.properties
+else
+    echo "WARNING: Python not found! Chaquopy build may fail."
+fi
 # =======================
 # 3. Build Setup
 # =======================
