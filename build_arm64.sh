@@ -83,10 +83,10 @@ echo "sdk.dir=$ANDROID_HOME" > local.properties
 # 3. Build Setup
 # =======================
 
-# Generate dummy google-services.json if missing
-if [ ! -f "TMessagesProj_App/google-services.json" ]; then
-    echo "Creating dummy google-services.json..."
-    cat > TMessagesProj_App/google-services.json <<EOF
+# Generate dummy google-services.json (Always overwrite to ensure correct package name)
+echo "Creating dummy google-services.json..."
+mkdir -p TMessagesProj_App
+cat > TMessagesProj_App/google-services.json <<EOF
 {
   "project_info": {
     "project_number": "000000000000",
@@ -124,13 +124,12 @@ if [ ! -f "TMessagesProj_App/google-services.json" ]; then
   "configuration_version": "1"
 }
 EOF
-fi
 
-# Generate Extra.java if missing
+# Generate Extra.java (Always overwrite to ensure correct keys)
 EXTRA_JAVA_PATH="TMessagesProj/src/main/java/tw/nekomimi/nekogram/Extra.java"
-if [ ! -f "$EXTRA_JAVA_PATH" ]; then
-    echo "Creating dummy Extra.java..."
-    cat > "$EXTRA_JAVA_PATH" <<EOF
+echo "Creating Extra.java..."
+mkdir -p "$(dirname "$EXTRA_JAVA_PATH")"
+cat > "$EXTRA_JAVA_PATH" <<EOF
 package tw.nekomimi.nekogram;
 
 import org.telegram.messenger.BuildConfig;
@@ -173,7 +172,6 @@ public class Extra {
     }
 }
 EOF
-fi
 
 # =======================
 # 4. Build
