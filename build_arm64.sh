@@ -185,4 +185,4 @@ export CMAKE_BUILD_PARALLEL_LEVEL=2
 chmod +x gradlew
 # --max-workers=2 limits Gradle parallelism
 # Force JVM args via command line to ensure they are picked up
-./gradlew assemblePlay -x lint -x test --max-workers=2 -Dorg.gradle.jvmargs="-Xmx2048m -XX:MaxMetaspaceSize=512m"
+./gradlew assemblePlay -x lint -x test -x uploadSentryProguardMappingsPlay -x uploadSentryNativeSymbolsForPlay --max-workers=2 -Dorg.gradle.jvmargs="-Xmx2048m -XX:MaxMetaspaceSize=512m"
