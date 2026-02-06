@@ -9,24 +9,24 @@ current_ver=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}')
 echo "Current detected version: $current_ver"
 
 is_valid_version() {
-    [[ "$1" =~ ^17.* ]] || [[ "$1" =~ ^21.* ]] || [[ "$1" =~ ^1[89].* ]] || [[ "$1" =~ ^2[0-9].* ]]
+    [[ "$1" =~ ^21.* ]] || [[ "$1" =~ ^2[2-9].* ]]
 }
 
 if is_valid_version "$current_ver"; then
     echo "Java version is compatible."
 else
-    echo "Java version incompatible or missing. Setting up Java 17..."
+    echo "Java version incompatible or missing (Need 21+). Setting up Java 21..."
     
     # Try standard paths first
-    if [[ -d "/usr/lib/jvm/java-17-openjdk-amd64" ]]; then
-        export JAVA_HOME="/usr/lib/jvm/java-17-openjdk-amd64"
-    elif [[ -d "/usr/lib/jvm/msopenjdk-17-amd64" ]]; then
-        export JAVA_HOME="/usr/lib/jvm/msopenjdk-17-amd64"
+    if [[ -d "/usr/lib/jvm/java-21-openjdk-amd64" ]]; then
+        export JAVA_HOME="/usr/lib/jvm/java-21-openjdk-amd64"
+    elif [[ -d "/usr/lib/jvm/msopenjdk-21-amd64" ]]; then
+        export JAVA_HOME="/usr/lib/jvm/msopenjdk-21-amd64"
     else
-        echo "Installing OpenJDK 17..."
+        echo "Installing OpenJDK 21..."
         sudo apt-get update -qq
-        sudo apt-get install -y openjdk-17-jdk-headless
-        export JAVA_HOME="/usr/lib/jvm/java-17-openjdk-amd64"
+        sudo apt-get install -y openjdk-21-jdk-headless
+        export JAVA_HOME="/usr/lib/jvm/java-21-openjdk-amd64"
     fi
     export PATH="$JAVA_HOME/bin:$PATH"
 fi
@@ -135,9 +135,7 @@ echo "Starting optimized ARM64 build..."
 # Limit CMake native build jobs
 export CMAKE_BUILD_PARALLEL_LEVEL=2 
 
-# Limit Gradle JVM heap to 2GB to leave room for native compiler
-export ORG_GRADLE_JVMARGS="-Xmx2048m -XX:MaxMetaspaceSize=512m"
-
 chmod +x gradlew
 # --max-workers=2 limits Gradle parallelism
-./gradlew assemblePlay -x lint -x test --max-workers=2
+# Force JVM args via command line to ensure they are picked up
+./gradlew assemblePlay -x lint -x test --max-workers=2 -Dorg.gradle.jvmargs="-Xmx2048m -XX:MaxMetaspaceSize=512m"
