@@ -80,7 +80,54 @@ fi
 echo "sdk.dir=$ANDROID_HOME" > local.properties
 
 # =======================
-# 3. Build
+# 3. Build Setup
+# =======================
+
+# Generate dummy google-services.json if missing
+if [ ! -f "TMessagesProj_App/google-services.json" ]; then
+    echo "Creating dummy google-services.json..."
+    cat > TMessagesProj_App/google-services.json <<EOF
+{
+  "project_info": {
+    "project_number": "000000000000",
+    "project_id": "mock-project-id",
+    "storage_bucket": "mock-project-id.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
+        "android_client_info": {
+          "package_name": "org.telegram.messenger.regular"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "mock-api-key"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
+EOF
+fi
+
+# =======================
+# 4. Build
 # =======================
 echo "Starting optimized ARM64 build..."
 chmod +x gradlew
