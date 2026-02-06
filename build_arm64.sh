@@ -53,12 +53,12 @@ if [ ! -d "$ANDROID_HOME/cmdline-tools" ]; then
     yes | sdkmanager --licenses > /dev/null
     
     echo "Installing SDK components..."
-    # Components matched from build.gradle. Using "cmake" to get latest available in SDK.
+    # Components matched from build.gradle
     sdkmanager "platform-tools" \
                "platforms;android-36" \
                "build-tools;36.1.0" \
                "ndk;27.3.13750724" \
-               "cmake" || true
+               "cmake;3.22.1"
 
     # Install system cmake as fallback (often newer than SDK default)
     if command -v sudo &> /dev/null; then
