@@ -53,12 +53,25 @@ if [ ! -d "$ANDROID_HOME/cmdline-tools" ]; then
     yes | sdkmanager --licenses > /dev/null
     
     echo "Installing SDK components..."
-    # Components matched from build.gradle
+    # Components matched from build.gradle. Using "cmake" to get latest available in SDK.
     sdkmanager "platform-tools" \
                "platforms;android-36" \
                "build-tools;36.1.0" \
                "ndk;27.3.13750724" \
-               "cmake;3.22.1"
+               "cmake" || true
+
+    # Install system cmake as fallback (often newer than SDK default)
+    if command -v sudo &> /dev/null; then
+         echo "Installing system CMake..."
+         sudo apt-get install -y cmake build-essential
+    fi
+
+    echo "Checking CMake version..."
+    if command -v cmake &> /dev/null; then
+        cmake --version
+    else
+        echo "CMake not found in PATH"
+    fi
 else
     echo "Android SDK found at $ANDROID_HOME"
 fi
